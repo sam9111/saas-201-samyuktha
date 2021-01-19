@@ -17,49 +17,46 @@ domain = get_command_line_argument
 # array of string, where each element is a line
 # https://www.rubydoc.info/stdlib/core/IO:readlines
 dns_raw = File.readlines('zone')
-
 # function to parse file and build a hash
 def parse_dns(dns_raw)
-
   dns_records = {}
-
   dns_raw.each do |line|
     line = line.strip
-
-    if line == '' || line[0] == '#' # skipping comments and blank lines
+    # skipping comments and blank lines
+    if line == '' || line[0] == '#'
       next
     else
-      line = line.split(', ') #splitting lines
-
+      line = line.split(', ')
       if line.length == 1
-        dns_records[line[0].to_sym] = { :type => nil } # only domain name is available and entered in hash
+        # only domain name is available and entered in hash
+        dns_records[line[0].to_sym] = { :type => nil }
         next
       elsif line.length == 2
-        dns_records[line[1].to_sym] = { :type => line[0] } # alias does not exist
+        # alias does not exist
+        dns_records[line[1].to_sym] = { :type => line[0] }
         next
       else
         dns_records[line[1].to_sym] = {}
       end
 
       if line[0] == 'A'
-        dns_records[line[1].to_sym] = { :type => line[0], :IP => line[2] } # value for A records have only the type and the IP address of the domain
+        # value for A records have only the type and the IP address of the domain
+        dns_records[line[1].to_sym] = { :type => line[0], :IP => line[2] }
+        # value for CNAME records have only the type and the alias of the domain
       elsif line[0] == 'CNAME'
-        dns_records[line[1].to_sym] = { :type => line[0], :alias => line[2].to_sym } # value for CNAME records have only the type and the alias of the domain
+        dns_records[line[1].to_sym] = { :type => line[0], :alias => line[2].to_sym }
       end
     end
   end
   dns_records
 end
 
-#function for resolving IP address for given domain
 def resolve(dns_records, lookup_chain, domain)
-
   record = dns_records[domain.to_sym]
-
-  if record == nil #no key with given domain name
+  #no key with given domain name
+  if record == nil
     return lookup_chain.push("Error: record not found for #{domain}")
   end
-
   if record[:type] == nil #unknown type of record
     lookup_chain.push("Error: record type is unknown for #{domain}")
   elsif record[:type] == 'CNAME'
