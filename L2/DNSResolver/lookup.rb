@@ -42,8 +42,9 @@ def parse_dns(dns_raw)
       if line[0] == 'A'
         # value for A records have only the type and the IP address of the domain
         dns_records[line[1].to_sym] = { :type => line[0], :IP => line[2] }
-        # value for CNAME records have only the type and the alias of the domain
+        
       elsif line[0] == 'CNAME'
+        # value for CNAME records have only the type and the alias of the domain
         dns_records[line[1].to_sym] = { :type => line[0], :alias => line[2].to_sym }
       end
     end
