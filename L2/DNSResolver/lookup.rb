@@ -20,32 +20,16 @@ dns_raw = File.readlines('zone')
 # function to parse file and build a hash
 def parse_dns(dns_raw)
   dns_records = {}
-  dns_raw.each do |line|
-    line = line.strip
-    # skipping comments and blank lines
-    if line == '' || line[0] == '#'
-      next
-    else
-      line = line.split(', ')
-      if line.length == 1
-        # only domain name is available and entered in hash
-        dns_records[line[0].to_sym] = { :type => nil }
-        next
-      elsif line.length == 2
-        # alias does not exist
-        dns_records[line[1].to_sym] = { :type => line[0] }
-        next
-      else
-        dns_records[line[1].to_sym] = {}
-      end
 
-      if line[0] == 'A'
-        # value for A records have only the type and the IP address of the domain
-        dns_records[line[1].to_sym] = { :type => line[0], :IP => line[2] }
-        # value for CNAME records have only the type and the alias of the domain
-      elsif line[0] == 'CNAME'
-        dns_records[line[1].to_sym] = { :type => line[0], :alias => line[2].to_sym }
-      end
+  dns_raw.
+    reject { |line| line.empty? or line[0] == "#" }.
+    map { |line| line.strip.split(', ') }.
+    reject { |line| line.length < 3 }.
+    each do |line|
+    if line[0] == 'A'
+      dns_records[line[1].to_sym] = { :type => line[0], :IP => line[2] }
+    else
+      dns_records[line[1].to_sym] = { :type => line[0], :alias => line[2].to_sym }
     end
   end
   dns_records
@@ -75,6 +59,7 @@ end
 # Remember to implement them above this line since in Ruby
 # you can invoke a function only after it is defined.
 dns_records = parse_dns(dns_raw)
+puts dns_records
 lookup_chain = [domain]
 lookup_chain = resolve(dns_records, lookup_chain, domain)
 puts lookup_chain.join(' => ')
